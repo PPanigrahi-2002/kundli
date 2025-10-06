@@ -1,0 +1,7 @@
+# Example Environment Configuration
+# Copy this to .env and replace with your actual API key
+
+# Groq API Key - Get from https://console.groq.com/
+GROQ_API_KEY=gsk_your_actual_groq_api_key_here
+
+# Note: Replace 'gsk_your_actual_groq_api_key_here' with your real API key from Groq Console
