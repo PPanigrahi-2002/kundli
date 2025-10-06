@@ -3,3 +3,6 @@ streamlit
 pytz
 geopy
 numpy
+matplotlib
+pandas
+certifi
