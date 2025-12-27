@@ -71,13 +71,29 @@ with st.sidebar:
 # Main Kundli Generation Tab
 with main_tab:
     st.subheader("📊 Generate Your Kundli")
-    
+
+    # Quick Presets (Speed Dial)
+    st.markdown("**🚀 Quick Presets:**")
+    if st.button("Load 'Vishesh'"):
+        st.session_state.birth_date_input = date(2001, 6, 16)
+        st.session_state.birth_time_input = "12:06"
+        st.session_state.location_input = "Seoni, Madhya Pradesh"
+        st.rerun()
+
     # Inputs with calendar and location
-    birth_date = st.date_input("Birth Date", value=date(2000, 1, 1))
-    birth_time_str = st.text_input("Birth Time (HH:MM, 24-hour format)", "12:00")
+    # Use session state keys to allow programmatic updates
+    if "birth_date_input" not in st.session_state:
+        st.session_state.birth_date_input = date(2000, 1, 1)
+    if "birth_time_input" not in st.session_state:
+        st.session_state.birth_time_input = "12:00"
+    if "location_input" not in st.session_state:
+        st.session_state.location_input = ""
+
+    birth_date = st.date_input("Birth Date", key="birth_date_input")
+    birth_time_str = st.text_input("Birth Time (HH:MM, 24-hour format)", key="birth_time_input")
 
     # Location search with suggestions
-    location_search = st.text_input("Type Birth Location (City, Country)", "")
+    location_search = st.text_input("Type Birth Location (City, Country)", key="location_input")
 
     # Get coordinates from location
     latitude = None

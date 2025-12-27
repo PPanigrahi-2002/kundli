@@ -14,6 +14,8 @@ def draw_kundali_chart(planets, ascendant):
     
     # Draw standard North Indian Chart (Square with Diagonals and Diamond)
     
+    # Draw standard North Indian Chart (Square with Diagonals and Diamond)
+    
     # 1. Outer Box (Square)
     outer_box = patches.Rectangle((0, 0), 1, 1, fill=False, edgecolor='white', linewidth=2)
     ax.add_patch(outer_box)
@@ -35,18 +37,18 @@ def draw_kundali_chart(planets, ascendant):
     # Position format: (x, y, house_number)
     # Following the exact layout from the reference image
     house_positions = [
-        (0.5, 0.82, 1),    # 1st house - Top (Lagna) - Lowered slightly
-        (0.22, 0.80, 2),   # 2nd house - Top Left - Moved Left
-        (0.12, 0.60, 3),   # 3rd house - Left Upper - Moved Left
-        (0.35, 0.5, 4),    # 4th house - Left Center (Sukh)
-        (0.12, 0.40, 5),   # 5th house - Left Lower - Moved Left
-        (0.22, 0.20, 6),   # 6th house - Bottom Left - Moved Left
-        (0.5, 0.15, 7),    # 7th house - Bottom (Kalatra)
-        (0.78, 0.20, 8),   # 8th house - Bottom Right - Moved Right
-        (0.88, 0.40, 9),   # 9th house - Right Lower - Moved Right
-        (0.65, 0.5, 10),   # 10th house - Right Center (Karma)
-        (0.88, 0.60, 11),  # 11th house - Right Upper - Moved Right
-        (0.78, 0.80, 12)   # 12th house - Top Right - Moved Right
+        (0.5, 0.72, 1),    # 1st house - Top (Lagna)
+        (0.25, 0.88, 2),   # 2nd house - Top Left - Calculator Centroid
+        (0.12, 0.75, 3),   # 3rd house - Left Upper - Calculator Centroid
+        (0.25, 0.50, 4),   # 4th house - Left Center (Sukh)
+        (0.12, 0.25, 5),   # 5th house - Left Lower - Calculator Centroid
+        (0.25, 0.12, 6),   # 6th house - Bottom Left - Calculator Centroid
+        (0.5, 0.28, 7),    # 7th house - Bottom (Kalatra)
+        (0.75, 0.12, 8),   # 8th house - Bottom Right - Calculator Centroid
+        (0.88, 0.25, 9),   # 9th house - Right Lower - Calculator Centroid
+        (0.75, 0.50, 10),  # 10th house - Right Center (Karma)
+        (0.88, 0.75, 11),  # 11th house - Right Upper - Calculator Centroid
+        (0.75, 0.88, 12)   # 12th house - Top Right - Calculator Centroid
     ]
     
     # Helper: zodiac sequence and ascendant sign extraction
@@ -73,60 +75,71 @@ def draw_kundali_chart(planets, ascendant):
     except ValueError:
         asc_idx = 0
 
-    # Short planet names for better visualization
-    short_names = {
-        'Sun': 'Su', 'Moon': 'Mo', 'Mars': 'Ma',
-        'Mercury': 'Me', 'Jupiter': 'Ju', 'Venus': 'Ve',
-        'Saturn': 'Sa', 'Rahu': 'Ra', 'Ketu': 'Ke'
+    # Vedic Planet Names
+    planet_names = {
+        'Sun': 'Surya', 'Moon': 'Chandra', 'Mars': 'Mangal',
+        'Mercury': 'Budh', 'Jupiter': 'Guru', 'Venus': 'Shukra',
+        'Saturn': 'Shani', 'Rahu': 'Rahu', 'Ketu': 'Ketu'
     }
     
     # Group planets by house
     house_planets = {i: [] for i in range(1, 13)}
     for planet, pos in planets.items():
         house = pos['house']
-        label = short_names.get(planet, planet[:2])
+        label = planet_names.get(planet, planet)
         house_planets[house].append(label)
     
-    # Combine planets in the same house like in reference image
-    house_planets_combined = {}
-    for house_num, planets_list in house_planets.items():
-        if planets_list:
-            # Join planets with space like "Budh Mer^ Mangal"
-            house_planets_combined[house_num] = ' '.join(planets_list)
-        else:
-            house_planets_combined[house_num] = ""
-    
-    # Draw house numbers, sign labels, and planets
+    # Define Sign/House Number positions (Outer edges of the triangles)
+    # to keep the center clear for planets
+    sign_positions = [
+        (0.5, 0.92, 1),    # H1 Top
+        (0.15, 0.85, 2),   # H2 Top Left
+        (0.08, 0.60, 3),   # H3 Left Upper
+        (0.15, 0.5, 4),    # H4 Left Center
+        (0.08, 0.40, 5),   # H5 Left Lower
+        (0.15, 0.15, 6),   # H6 Bottom Left
+        (0.5, 0.08, 7),    # H7 Bottom
+        (0.85, 0.15, 8),   # H8 Bottom Right
+        (0.92, 0.40, 9),   # H9 Right Lower
+        (0.85, 0.5, 10),   # H10 Right Center
+        (0.92, 0.60, 11),  # H11 Right Upper
+        (0.85, 0.85, 12)   # H12 Top Right
+    ]
+
+    # Draw Sign Numbers (Rashi Numbers) at outer positions
+    # Standard North Indian charts show the Rashi number (1=Aries, 5=Leo) in the house
+    for x, y, house_num in sign_positions:
+        # Calculate Rashi number (1-12)
+        sign_idx = (asc_idx + house_num - 1) % 12
+        sign_number = sign_idx + 1
+        
+        ax.text(x, y, f"{sign_number}", ha='center', va='center', 
+                fontsize=10, color='white', weight='bold')
+
+    # Draw Planets and Special Labels (Lagna) at Center positions
     for x, y, house_num in house_positions:
-        # Compute sign for this house starting from ascendant
-        sign_label = zodiac_signs[(asc_idx + house_num - 1) % 12]
-        
-        # Draw house number and sign in the format shown in reference chart
-        ax.text(x, y + 0.08, f"{house_num} {sign_label[:3]}", ha='center', va='center', 
-                fontsize=10, weight='bold', color='white')
-        
         # Get planets for this house
         planets_list = house_planets.get(house_num, [])
-
-        if planets_list:
-            # Chunk planets (max 2 per line) to prevent wide text overlap
-            chunks = [planets_list[i:i+2] for i in range(0, len(planets_list), 2)]
-            house_planets_text = '\n'.join([' '.join(chunk) for chunk in chunks])
-            
-            # Reduce font size slightly and use multiline
-            ax.text(x, y - 0.04, house_planets_text, ha='center', va='center', 
-                    fontsize=8, color='yellow', weight='bold')
-    
-    # Remove the ascendant marker box as it's not in the reference chart
-    # The ascendant info is already shown in the 1st house
+        
+        # Special handling for H1 (Lagna)
+        if house_num == 1:
+            if not planets_list:
+                # If transparent, just show Lagna
+                ax.text(x, y, "Lagna", ha='center', va='center', fontsize=10, color='#FFD700', weight='bold') # Gold
+            else:
+                # Show Lagna, then planets below
+                text_content = "Lagna\n" + '\n'.join(planets_list)
+                ax.text(x, y, text_content, ha='center', va='center', fontsize=9, color='#FFD700', weight='bold')
+        else:
+            if planets_list:
+                # Stack planets
+                text_content = '\n'.join(planets_list)
+                ax.text(x, y, text_content, ha='center', va='center', fontsize=9, color='#FFD700', weight='bold')
     
     # Set limits and remove axes
     ax.set_xlim(-0.05, 1.05)
     ax.set_ylim(-0.05, 1.05)
     ax.axis('off')
     
-    # No title needed as it matches the mobile app style
-    
     plt.tight_layout()
-    
     return fig
