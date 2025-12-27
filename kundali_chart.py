@@ -90,20 +90,20 @@ def draw_kundali_chart(planets, ascendant):
         house_planets[house].append(label)
     
     # Define Sign/House Number positions (Outer edges of the triangles)
-    # to keep the center clear for planets
+    # Fixed to ensure they are NOT on the diagonals
     sign_positions = [
-        (0.5, 0.92, 1),    # H1 Top
-        (0.15, 0.85, 2),   # H2 Top Left
-        (0.08, 0.60, 3),   # H3 Left Upper
-        (0.15, 0.5, 4),    # H4 Left Center
-        (0.08, 0.40, 5),   # H5 Left Lower
-        (0.15, 0.15, 6),   # H6 Bottom Left
-        (0.5, 0.08, 7),    # H7 Bottom
-        (0.85, 0.15, 8),   # H8 Bottom Right
-        (0.92, 0.40, 9),   # H9 Right Lower
-        (0.85, 0.5, 10),   # H10 Right Center
-        (0.92, 0.60, 11),  # H11 Right Upper
-        (0.85, 0.85, 12)   # H12 Top Right
+        (0.5, 0.94, 1),    # H1 Top Center
+        (0.30, 0.88, 2),   # H2 Top Left (Upper)
+        (0.10, 0.70, 3),   # H3 Top Left (Lower)
+        (0.18, 0.5, 4),    # H4 Left Center
+        (0.10, 0.30, 5),   # H5 Bottom Left (Upper)
+        (0.30, 0.12, 6),   # H6 Bottom Left (Lower)
+        (0.5, 0.06, 7),    # H7 Bottom Center
+        (0.70, 0.12, 8),   # H8 Bottom Right (Lower)
+        (0.90, 0.30, 9),   # H9 Bottom Right (Upper)
+        (0.82, 0.5, 10),   # H10 Right Center
+        (0.90, 0.70, 11),  # H11 Top Right (Lower)
+        (0.70, 0.88, 12)   # H12 Top Right (Upper)
     ]
 
     # Draw Sign Numbers (Rashi Numbers) at outer positions
