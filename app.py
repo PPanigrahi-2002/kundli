@@ -73,12 +73,12 @@ with main_tab:
     st.subheader("📊 Generate Your Kundli")
 
     # Quick Presets (Speed Dial)
-    st.markdown("**🚀 Quick Presets:**")
-    if st.button("Load 'Vishesh'"):
-        st.session_state.birth_date_input = date(2001, 6, 16)
-        st.session_state.birth_time_input = "12:06"
-        st.session_state.location_input = "Seoni, Madhya Pradesh"
-        st.rerun()
+    # st.markdown("**🚀 Quick Presets:**")
+    # if st.button("Load 'Vishesh'"):
+    #     st.session_state.birth_date_input = date(2001, 6, 16)
+    #     st.session_state.birth_time_input = "12:06"
+    #     st.session_state.location_input = "Seoni, Madhya Pradesh"
+    #     st.rerun()
 
     # Inputs with calendar and location
     # Use session state keys to allow programmatic updates
