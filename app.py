@@ -195,10 +195,15 @@ with main_tab:
             st.error(f"Error calculating Kundli: {planets}")
         else:
             # Store birth chart data for AI features
+            # Ensure selected_location is safely defined
+            safe_location = (
+                selected_location if 'selected_location' in locals() and selected_location else "Custom Coordinates"
+            )
+
             birth_chart_data = {
                 "planets": planets,
                 "ascendant": ascendant,
-                "birth_info": f"{format_date(birth_dt)} at {birth_time_str}, {selected_location}",
+                "birth_info": f"{format_date(birth_dt)} at {birth_time_str}, {safe_location}",
                 "birth_dt": birth_dt
             }
             

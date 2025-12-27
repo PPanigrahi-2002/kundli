@@ -1,0 +1,15 @@
+skyfield
+streamlit
+pytz
+geopy
+numpy
+matplotlib
+pandas
+certifi
+langchain
+langchain-groq
+python-dotenv
+groq
+timezonefinder==5.2.0
+
+

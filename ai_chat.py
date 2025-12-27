@@ -171,7 +171,18 @@ def render_ai_features(birth_chart_data=None):
     Args:
         birth_chart_data: Optional birth chart data
     """
-    # Simple AI features without complex state management
+    # Ensure we have a single shared interpreter instance
+    interpreter = None
+    try:
+        if "ai_interpreter" not in st.session_state or st.session_state.ai_interpreter is None:
+            from ai_interpreter import create_ai_interpreter
+            st.session_state.ai_interpreter = create_ai_interpreter()
+        interpreter = st.session_state.ai_interpreter
+    except Exception as e:
+        st.error(f"Failed to initialize AI interpreter: {str(e)}")
+        interpreter = None
+
+    # Simple AI features using shared interpreter instance
     st.subheader("🔮 AI Astrology Features")
     
     # Quick insights section
@@ -183,8 +194,8 @@ def render_ai_features(birth_chart_data=None):
         with col1:
             if st.button("💼 Career Guidance", key="career_btn"):
                 try:
-                    from ai_interpreter import create_ai_interpreter
-                    interpreter = create_ai_interpreter()
+                    if not interpreter:
+                        raise RuntimeError("AI interpreter not available")
                     insight = interpreter.get_astrological_insights(
                         birth_chart_data["planets"],
                         birth_chart_data["ascendant"],
@@ -196,8 +207,8 @@ def render_ai_features(birth_chart_data=None):
             
             if st.button("💕 Love & Relationships", key="love_btn"):
                 try:
-                    from ai_interpreter import create_ai_interpreter
-                    interpreter = create_ai_interpreter()
+                    if not interpreter:
+                        raise RuntimeError("AI interpreter not available")
                     insight = interpreter.get_astrological_insights(
                         birth_chart_data["planets"],
                         birth_chart_data["ascendant"],
@@ -210,8 +221,8 @@ def render_ai_features(birth_chart_data=None):
         with col2:
             if st.button("🏥 Health Insights", key="health_btn"):
                 try:
-                    from ai_interpreter import create_ai_interpreter
-                    interpreter = create_ai_interpreter()
+                    if not interpreter:
+                        raise RuntimeError("AI interpreter not available")
                     insight = interpreter.get_astrological_insights(
                         birth_chart_data["planets"],
                         birth_chart_data["ascendant"],
@@ -223,8 +234,8 @@ def render_ai_features(birth_chart_data=None):
             
             if st.button("💰 Finance & Wealth", key="finance_btn"):
                 try:
-                    from ai_interpreter import create_ai_interpreter
-                    interpreter = create_ai_interpreter()
+                    if not interpreter:
+                        raise RuntimeError("AI interpreter not available")
                     insight = interpreter.get_astrological_insights(
                         birth_chart_data["planets"],
                         birth_chart_data["ascendant"],
@@ -242,8 +253,8 @@ def render_ai_features(birth_chart_data=None):
         if st.button("Ask AI", key="ask_ai_btn"):
             if question:
                 try:
-                    from ai_interpreter import create_ai_interpreter
-                    interpreter = create_ai_interpreter()
+                    if not interpreter:
+                        raise RuntimeError("AI interpreter not available")
                     birth_chart_context = f"Birth: {birth_chart_data['birth_info']}, Ascendant: {birth_chart_data['ascendant']}"
                     
                     response = interpreter.chat_with_astrologer(question, birth_chart_context)

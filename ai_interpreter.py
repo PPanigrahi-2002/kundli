@@ -262,7 +262,8 @@ class KundliAIInterpreter:
     
     def clear_memory(self):
         """Clear conversation memory"""
-        self.memory.clear()
+        if self.memory:
+            self.memory.clear()
     
     def get_astrological_insights(self, planets, ascendant, question_type="general"):
         """
