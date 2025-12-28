@@ -6,11 +6,6 @@ numpy
 matplotlib
 pandas
 certifi
-langchain
-langchain-groq
-python-dotenv
 groq
-langchain-community
+python-dotenv
 timezonefinder==5.2.0
-
-

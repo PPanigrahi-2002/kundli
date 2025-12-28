@@ -1,317 +1,146 @@
-# ai_interpreter.py
+# ai_interpreter.py - Simplified version using Groq SDK directly
 import os
-try:
-    from langchain_groq import ChatGroq
-    from langchain.prompts import PromptTemplate
-    from langchain.chains import LLMChain
-    from dotenv import load_dotenv
-    DEPENDENCIES_AVAILABLE = True
-except ImportError as e:
-    DEPENDENCIES_AVAILABLE = False
-    print(f"DEBUG: AI dependencies not available in ai_interpreter: {e}")
 
-if DEPENDENCIES_AVAILABLE:
+DEPENDENCIES_AVAILABLE = True
+IMPORT_ERROR_MSG = ""
+
+try:
+    from groq import Groq
+except ImportError as e:
+    IMPORT_ERROR_MSG = f"groq SDK failed: {e}"
+    DEPENDENCIES_AVAILABLE = False
+
+try:
+    from dotenv import load_dotenv
     load_dotenv()
+except ImportError:
+    pass  # dotenv is optional
 
 class KundliAIInterpreter:
     """
-    AI-powered Kundli interpreter using LangChain and Groq
+    AI-powered Kundli interpreter using Groq SDK directly
     Provides personalized astrological readings and interpretations
     """
     
     def __init__(self):
         if not DEPENDENCIES_AVAILABLE:
-            raise ImportError(f"Required AI dependencies are not installed. Please check logs for details.")
+            raise ImportError(f"Required AI dependencies are not installed. {IMPORT_ERROR_MSG}")
         
-        from config import Config
-        # Initialize Groq chat model - using llama3-8b for fast responses
-        self.llm = ChatGroq(
-            model_name="llama-3.1-8b-instant",
-            groq_api_key=Config.GROQ_API_KEY,
-            temperature=0.7,
-            max_tokens=1000
-        )
-        
-        # Setup memory for conversation context (using updated LangChain syntax)
+        # Get API key from config or environment
         try:
-            # Try the newer syntax first
-            from langchain_community.memory import ConversationBufferMemory
-            self.memory = ConversationBufferMemory(
-                memory_key="chat_history"
-            )
-        except ImportError:
-            try:
-                # Fallback to older syntax
-                self.memory = ConversationBufferMemory(
-                    memory_key="chat_history",
-                    return_messages=True
-                )
-            except Exception:
-                # Final fallback - create a simple memory object
-                self.memory = None
+            from config import Config
+            api_key = Config.GROQ_API_KEY
+        except:
+            api_key = os.getenv("GROQ_API_KEY")
         
-        # Create specialized prompts for different types of readings
-        self._setup_prompts()
+        if not api_key:
+            raise ValueError("GROQ_API_KEY not found")
+        
+        self.client = Groq(api_key=api_key)
+        self.model = "llama-3.1-8b-instant"
+        self.chat_history = []
     
-    def _setup_prompts(self):
-        """Setup different prompt templates for various astrological interpretations"""
-        
-        # Main Kundli interpretation prompt
-        self.kundli_prompt = PromptTemplate(
-            input_variables=["planets", "ascendant", "birth_info", "chat_history"],
-            template="""
-            You are an expert Vedic astrologer with deep knowledge of Jyotish (Indian astrology). 
-            Analyze the following Kundli (birth chart) and provide a comprehensive interpretation.
-            
-            Birth Details: {birth_info}
-            Ascendant (Lagna): {ascendant}
-            
-            Planetary Positions:
-            {planets}
-            
-            Chat History: {chat_history}
-            
-            Please provide:
-            1. Overall personality analysis based on ascendant and planetary positions
-            2. Key strengths and challenges indicated by the chart
-            3. Career and profession guidance based on planetary influences
-            4. Relationship and marriage predictions
-            5. Health considerations
-            6. Lucky colors, numbers, and gemstones
-            7. General life guidance and remedies
-            
-            Make the reading personal, insightful, and practical. Use traditional Vedic astrology 
-            principles while making it accessible to modern readers. Keep the tone warm and encouraging.
-            """
-        )
-        
-        # Daily prediction prompt
-        self.daily_prompt = PromptTemplate(
-            input_variables=["current_positions", "birth_chart", "chat_history"],
-            template="""
-            You are a Vedic astrologer providing daily guidance. Based on the current planetary 
-            positions and the person's birth chart, provide today's predictions.
-            
-            Current Planetary Positions: {current_positions}
-            Birth Chart Summary: {birth_chart}
-            
-            Chat History: {chat_history}
-            
-            Provide:
-            1. Today's overall energy and mood
-            2. Best times for important activities
-            3. Areas to focus on or avoid
-            4. Lucky colors and numbers for today
-            5. General advice and precautions
-            
-            Keep it concise but meaningful.
-            """
-        )
-        
-        # Chat prompt for general astrology questions
-        self.chat_prompt = PromptTemplate(
-            input_variables=["question", "birth_chart", "chat_history"],
-            template="""
-            You are a knowledgeable and friendly Vedic astrologer. Answer the user's question 
-            about astrology, providing accurate information while being encouraging and helpful.
-            
-            User's Birth Chart Context: {birth_chart}
-            Question: {question}
-            Previous Conversation: {chat_history}
-            
-            Provide a detailed, accurate answer based on Vedic astrology principles. 
-            If the question relates to their specific chart, incorporate relevant planetary 
-            positions. Be warm, supportive, and practical in your guidance.
-            """
-        )
+    def _call_llm(self, system_prompt, user_prompt):
+        """Call Groq LLM directly"""
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.7,
+                max_tokens=1000
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            return f"Error calling AI: {str(e)}"
     
     def interpret_kundli(self, planets, ascendant, birth_info):
-        """
-        Generate comprehensive Kundli interpretation
+        """Generate comprehensive Kundli interpretation"""
+        system_prompt = """You are an expert Vedic astrologer with deep knowledge of Jyotish (Indian astrology). 
+        Analyze birth charts and provide comprehensive, accurate interpretations.
+        Be warm, encouraging, and practical in your guidance."""
         
-        Args:
-            planets: Dictionary of planetary positions
-            ascendant: Ascendant information
-            birth_info: Birth details (date, time, location)
-            
-        Returns:
-            str: AI-generated Kundli interpretation
-        """
-        try:
-            # Format planetary positions for the prompt
-            planets_text = self._format_planets_for_ai(planets)
-            
-            # Create chain for Kundli interpretation
-            if self.memory:
-                kundli_chain = LLMChain(
-                    llm=self.llm,
-                    prompt=self.kundli_prompt,
-                    memory=self.memory,
-                    verbose=False
-                )
-            else:
-                # Fallback without memory
-                kundli_chain = LLMChain(
-                    llm=self.llm,
-                    prompt=self.kundli_prompt,
-                    verbose=False
-                )
-            
-            # Generate interpretation
-            response = kundli_chain.run(
-                planets=planets_text,
-                ascendant=ascendant,
-                birth_info=birth_info,
-                chat_history=""
-            )
-            
-            return response
-            
-        except Exception as e:
-            return f"Sorry, I encountered an error while interpreting your Kundli: {str(e)}. Please try again."
+        planets_text = self._format_planets_for_ai(planets)
+        
+        user_prompt = f"""Analyze this Kundli (birth chart) and provide a comprehensive interpretation.
+        
+Birth Details: {birth_info}
+Ascendant (Lagna): {ascendant}
+
+Planetary Positions:
+{planets_text}
+
+Please provide:
+1. Overall personality analysis based on ascendant and planetary positions
+2. Key strengths and challenges indicated by the chart
+3. Career and profession guidance
+4. Relationship and marriage predictions
+5. Health considerations
+6. Lucky colors, numbers, and gemstones
+7. General life guidance and remedies"""
+        
+        return self._call_llm(system_prompt, user_prompt)
     
     def get_daily_prediction(self, current_positions, birth_chart_summary):
-        """
-        Generate daily astrological predictions
+        """Generate daily astrological predictions"""
+        system_prompt = "You are a Vedic astrologer providing daily guidance. Be concise but meaningful."
         
-        Args:
-            current_positions: Current planetary positions
-            birth_chart_summary: Summary of birth chart
-            
-        Returns:
-            str: AI-generated daily prediction
-        """
-        try:
-            if self.memory:
-                daily_chain = LLMChain(
-                    llm=self.llm,
-                    prompt=self.daily_prompt,
-                    memory=self.memory,
-                    verbose=False
-                )
-            else:
-                daily_chain = LLMChain(
-                    llm=self.llm,
-                    prompt=self.daily_prompt,
-                    verbose=False
-                )
-            
-            response = daily_chain.run(
-                current_positions=current_positions,
-                birth_chart=birth_chart_summary,
-                chat_history=""
-            )
-            
-            return response
-            
-        except Exception as e:
-            return f"Sorry, I couldn't generate today's prediction: {str(e)}. Please try again."
+        user_prompt = f"""Based on current planetary positions and the birth chart, provide today's predictions.
+
+Current Positions: {current_positions}
+Birth Chart: {birth_chart_summary}
+
+Provide:
+1. Today's overall energy
+2. Best times for activities
+3. Areas to focus on
+4. Lucky colors and numbers
+5. General advice"""
+        
+        return self._call_llm(system_prompt, user_prompt)
     
     def chat_with_astrologer(self, question, birth_chart_summary=""):
-        """
-        Chat with AI astrologer for general questions
+        """Chat with AI astrologer"""
+        system_prompt = """You are a knowledgeable and friendly Vedic astrologer. 
+        Answer questions about astrology accurately while being encouraging and helpful."""
         
-        Args:
-            question: User's astrology-related question
-            birth_chart_summary: Optional birth chart context
-            
-        Returns:
-            str: AI astrologer's response
-        """
-        try:
-            if self.memory:
-                chat_chain = LLMChain(
-                    llm=self.llm,
-                    prompt=self.chat_prompt,
-                    memory=self.memory,
-                    verbose=False
-                )
-            else:
-                chat_chain = LLMChain(
-                    llm=self.llm,
-                    prompt=self.chat_prompt,
-                    verbose=False
-                )
-            
-            response = chat_chain.run(
-                question=question,
-                birth_chart=birth_chart_summary,
-                chat_history=""
-            )
-            
-            return response
-            
-        except Exception as e:
-            return f"Sorry, I couldn't process your question: {str(e)}. Please try again."
+        user_prompt = f"""Birth Chart Context: {birth_chart_summary}
+
+Question: {question}
+
+Provide a detailed, accurate answer based on Vedic astrology principles."""
+        
+        return self._call_llm(system_prompt, user_prompt)
+    
+    def get_astrological_insights(self, planets, ascendant, question_type="general"):
+        """Get specific astrological insights"""
+        system_prompt = f"You are a Vedic astrologer providing specific insights about {question_type}. Be practical and actionable."
+        
+        planets_text = self._format_planets_for_ai(planets)
+        
+        user_prompt = f"""Provide specific insights about {question_type} based on this birth chart:
+
+Ascendant: {ascendant}
+Planetary Positions:
+{planets_text}
+
+Focus specifically on {question_type} predictions, remedies, and guidance."""
+        
+        return self._call_llm(system_prompt, user_prompt)
     
     def _format_planets_for_ai(self, planets):
-        """
-        Format planetary positions for AI interpretation
-        
-        Args:
-            planets: Dictionary of planetary positions
-            
-        Returns:
-            str: Formatted planetary information
-        """
+        """Format planetary positions for AI interpretation"""
         formatted_text = ""
         for planet, data in planets.items():
             formatted_text += f"{planet}: {data['degree']} (House {data['house']})\n"
-        
         return formatted_text.strip()
     
     def clear_memory(self):
         """Clear conversation memory"""
-        if self.memory:
-            self.memory.clear()
-    
-    def get_astrological_insights(self, planets, ascendant, question_type="general"):
-        """
-        Get specific astrological insights based on question type
-        
-        Args:
-            planets: Planetary positions
-            ascendant: Ascendant information
-            question_type: Type of insight needed (career, love, health, etc.)
-            
-        Returns:
-            str: Targeted astrological insight
-        """
-        try:
-            # Create dynamic prompt based on question type
-            insight_prompt = PromptTemplate(
-                input_variables=["planets", "ascendant", "question_type"],
-                template=f"""
-                As a Vedic astrologer, provide specific insights about {question_type} based on this birth chart:
-                
-                Ascendant: {{ascendant}}
-                Planetary Positions:
-                {{planets}}
-                
-                Focus specifically on {question_type} predictions, remedies, and guidance. 
-                Be practical and actionable in your advice.
-                """
-            )
-            
-            insight_chain = LLMChain(
-                llm=self.llm,
-                prompt=insight_prompt,
-                verbose=False
-            )
-            
-            planets_text = self._format_planets_for_ai(planets)
-            response = insight_chain.run(
-                planets=planets_text,
-                ascendant=ascendant,
-                question_type=question_type
-            )
-            
-            return response
-            
-        except Exception as e:
-            return f"Sorry, I couldn't provide {question_type} insights: {str(e)}. Please try again."
+        self.chat_history = []
 
-# Utility function to create interpreter instance
 def create_ai_interpreter():
     """Create and return a new AI interpreter instance"""
     return KundliAIInterpreter()

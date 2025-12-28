@@ -1,13 +1,14 @@
 # ai_chat.py
 import streamlit as st
 try:
-    from ai_interpreter import create_ai_interpreter, DEPENDENCIES_AVAILABLE
+    from ai_interpreter import create_ai_interpreter, DEPENDENCIES_AVAILABLE, IMPORT_ERROR_MSG
     from config import Config
     import json
 except ImportError as e:
     st.error(f"AI features not available: {e}")
     print(f"DEBUG: AI Import Failure: {e}")
     DEPENDENCIES_AVAILABLE = False
+    IMPORT_ERROR_MSG = str(e)
 
 class KundliChatInterface:
     """
