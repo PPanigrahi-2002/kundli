@@ -9,7 +9,17 @@ class Config:
     """Configuration class for Kundli AI application"""
     
     # Groq API configuration
-    GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+    # Groq API configuration
+    try:
+        import streamlit as st
+        # Try getting from st.secrets first (for Cloud), then os.getenv (for Local)
+        if "GROQ_API_KEY" in st.secrets:
+             GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
+        else:
+             GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+    except (ImportError, FileNotFoundError):
+        # Fallback for local run without streamlit installed
+        GROQ_API_KEY = os.getenv("GROQ_API_KEY")
     
     # Model configuration
     DEFAULT_MODEL = "llama-3.1-8b-instant"  # Fast and efficient for real-time chat

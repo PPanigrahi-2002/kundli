@@ -6,6 +6,7 @@ try:
     import json
 except ImportError as e:
     st.error(f"AI features not available: {e}")
+    print(f"DEBUG: AI Import Failure: {e}")
     DEPENDENCIES_AVAILABLE = False
 
 class KundliChatInterface:

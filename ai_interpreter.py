@@ -4,12 +4,11 @@ try:
     from langchain_groq import ChatGroq
     from langchain.prompts import PromptTemplate
     from langchain.chains import LLMChain
-    from langchain.memory import ConversationBufferMemory
     from dotenv import load_dotenv
     DEPENDENCIES_AVAILABLE = True
 except ImportError as e:
     DEPENDENCIES_AVAILABLE = False
-    print(f"AI dependencies not available: {e}")
+    print(f"DEBUG: AI dependencies not available in ai_interpreter: {e}")
 
 if DEPENDENCIES_AVAILABLE:
     load_dotenv()
@@ -22,12 +21,13 @@ class KundliAIInterpreter:
     
     def __init__(self):
         if not DEPENDENCIES_AVAILABLE:
-            raise ImportError("Required AI dependencies are not installed. Please install langchain, langchain-groq, and python-dotenv.")
+            raise ImportError(f"Required AI dependencies are not installed. Please check logs for details.")
         
+        from config import Config
         # Initialize Groq chat model - using llama3-8b for fast responses
         self.llm = ChatGroq(
             model_name="llama-3.1-8b-instant",
-            groq_api_key=os.getenv("GROQ_API_KEY"),
+            groq_api_key=Config.GROQ_API_KEY,
             temperature=0.7,
             max_tokens=1000
         )

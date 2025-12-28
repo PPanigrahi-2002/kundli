@@ -15,6 +15,14 @@ try:
     from ai_chat import render_ai_features
     from ai_interpreter import create_ai_interpreter, DEPENDENCIES_AVAILABLE
     from config import Config
+
+    # Late-bind API Key from Streamlit Secrets if not loaded from .env
+    if not Config.GROQ_API_KEY:
+        try:
+            if "GROQ_API_KEY" in st.secrets:
+                Config.GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
+        except Exception:
+            pass
     AI_FEATURES_AVAILABLE = True
 except ImportError as e:
     AI_FEATURES_AVAILABLE = False

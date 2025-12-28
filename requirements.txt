@@ -10,6 +10,7 @@ langchain
 langchain-groq
 python-dotenv
 groq
+langchain-community
 timezonefinder==5.2.0
 
 
